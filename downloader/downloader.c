@@ -78,18 +78,36 @@ int main(int argc, char* argv[]) {
        * downloading the current chunk if the download mode is S
        * (sequential)
        */
+        int status = 0;
+        char outfile[100];
+        if (fork()==0) {
+            printf("\t chunk #%d: Range %d-%d \n", i, from, to);   
+            sprintf(outfile, "%s-%d", CHUNK_FILENAME_PREFIX, i);
+            download_fragment(TARGET_URL, from, to, outfile);
+            exit(status);
+        } else {
+            wait(&status);
+        }
     }
-  }
-
-  if (download_mode == 'P') {
-    /**
-     * TODO: wait until all the downloads have finished if the download mode
-     * is P (parallel)
-     */
-  }
+    if (download_mode == 'P') {
+      /**
+       * TODO: wait until all the downloads have finished if the download mode
+       * is P (parallel)
+       */
+        int status = 0;
+        char outfile[100];
+        if (fork()){ 
+            printf("\t chunk #%d: Range %d-%d \n", i, from, to);   
+            sprintf(outfile, "%s-%d", CHUNK_FILENAME_PREFIX, i);
+            download_fragment(TARGET_URL, from, to, outfile);
+            exit(status);
+        } else {
+            if (i==num_processes) wait(&status);
+        }
+    }
   printf("-- End downloader --\n");
 }
-
+}
 /**
  * Example curl call:
  * curl -s -H "Range: bytes=2-3" https://localhost/testfile.txt -o filename
